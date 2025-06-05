@@ -8,10 +8,10 @@ while others remain in clear text. All linear and conv layers are executed in FH
 import argparse
 import json
 import platform
+import socket
 import time
 from datetime import datetime
 from pathlib import Path
-import socket
 
 import cpuinfo
 import psutil
@@ -298,14 +298,13 @@ def evaluate_model_accuracy(hybrid_model, processor, mode="disable"):
     return top1_accuracy, top5_accuracy
 
 
-def save_metrics(results, system_info, compilation_time, target_modules, args, accuracy_results=None):
+def save_metrics(
+    results, system_info, compilation_time, target_modules, args, accuracy_results=None
+):
     """Save benchmark metrics in the expected format for the database."""
 
     # Get git information (placeholder for now)
-    git_info = {
-        "hash": "unknown_resnet_hash",
-        "timestamp": datetime.utcnow().timestamp()
-    }
+    git_info = {"hash": "unknown_resnet_hash", "timestamp": datetime.utcnow().timestamp()}
 
     # 1. Prepare the 'machine' part
     machine_data = {
@@ -339,32 +338,28 @@ def save_metrics(results, system_info, compilation_time, target_modules, args, a
 
     # Add timing results
     if "clear" in results:
-        metrics_list.append({
-            "metric_name": "clear_total_time_seconds",
-            "value": results["clear"]["total_time"]
-        })
-        metrics_list.append({
-            "metric_name": "clear_avg_time_per_sample_seconds",
-            "value": results["clear"]["avg_time"]
-        })
+        metrics_list.append(
+            {"metric_name": "clear_total_time_seconds", "value": results["clear"]["total_time"]}
+        )
+        metrics_list.append(
+            {
+                "metric_name": "clear_avg_time_per_sample_seconds",
+                "value": results["clear"]["avg_time"],
+            }
+        )
 
     if "fhe" in results:
-        metrics_list.append({
-            "metric_name": "fhe_total_time_seconds",
-            "value": results["fhe"]["total_time"]
-        })
-        metrics_list.append({
-            "metric_name": "fhe_avg_time_per_sample_seconds",
-            "value": results["fhe"]["avg_time"]
-        })
+        metrics_list.append(
+            {"metric_name": "fhe_total_time_seconds", "value": results["fhe"]["total_time"]}
+        )
+        metrics_list.append(
+            {"metric_name": "fhe_avg_time_per_sample_seconds", "value": results["fhe"]["avg_time"]}
+        )
 
         # Calculate overhead if both clear and FHE results exist
         if "clear" in results and results["clear"]["avg_time"] > 0:
             overhead = results["fhe"]["avg_time"] / results["clear"]["avg_time"]
-            metrics_list.append({
-                "metric_name": "fhe_overhead_factor",
-                "value": overhead
-            })
+            metrics_list.append({"metric_name": "fhe_overhead_factor", "value": overhead})
 
             # Calculate prediction consistency
             if "predictions" in results["clear"] and "predictions" in results["fhe"]:
@@ -374,31 +369,30 @@ def save_metrics(results, system_info, compilation_time, target_modules, args, a
                     if results["clear"]["predictions"][i][0] == results["fhe"]["predictions"][i][0]
                 )
                 consistency = (correct / args.num_samples) * 100
-                metrics_list.append({
-                    "metric_name": "top1_prediction_consistency_percent",
-                    "value": consistency
-                })
+                metrics_list.append(
+                    {"metric_name": "top1_prediction_consistency_percent", "value": consistency}
+                )
 
         # Add performance per FHE layer
         if len(target_modules) > 0:
-            metrics_list.append({
-                "metric_name": "avg_time_per_fhe_layer_seconds",
-                "value": results["fhe"]["avg_time"] / len(target_modules)
-            })
+            metrics_list.append(
+                {
+                    "metric_name": "avg_time_per_fhe_layer_seconds",
+                    "value": results["fhe"]["avg_time"] / len(target_modules),
+                }
+            )
 
     # Add accuracy results if available
     if accuracy_results:
         for mode, acc_data in accuracy_results.items():
             if "top1" in acc_data:
-                metrics_list.append({
-                    "metric_name": f"accuracy_{mode}_top1_percent",
-                    "value": acc_data["top1"]
-                })
+                metrics_list.append(
+                    {"metric_name": f"accuracy_{mode}_top1_percent", "value": acc_data["top1"]}
+                )
             if "top5" in acc_data:
-                metrics_list.append({
-                    "metric_name": f"accuracy_{mode}_top5_percent",
-                    "value": acc_data["top5"]
-                })
+                metrics_list.append(
+                    {"metric_name": f"accuracy_{mode}_top5_percent", "value": acc_data["top5"]}
+                )
 
     # 4. Build the complete structure
     session_data = {
@@ -535,7 +529,9 @@ def main():
             traceback.print_exc()
 
     # Save metrics for the benchmark database
-    metrics = save_metrics(results, system_info, compilation_time, target_modules, args, accuracy_results)
+    metrics = save_metrics(
+        results, system_info, compilation_time, target_modules, args, accuracy_results
+    )
 
     # Print comprehensive final statistics
     print("\n" + "=" * 60)
