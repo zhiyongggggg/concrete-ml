@@ -50,7 +50,10 @@ env:
   AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
   RUNNER_TOOL_CACHE: /opt/hostedtoolcache
   SLAB_PROFILE_CPU: big-cpu
-  SLAB_PROFILE_GPU: 8xh100
+  # NOTE: Using single-h100 instead of 8xh100 due to Hyperstack availability issues
+  # The n3-H100x8-NVLink flavor returns 502 Bad Gateway errors
+  # TODO: Investigate 8x H100 availability and correct flavor names
+  SLAB_PROFILE_GPU: single-h100
 
 
 # Jobs
@@ -72,8 +75,8 @@ jobs:
           backend: aws
           profile: ${{ env.SLAB_PROFILE_CPU }}
 
-  setup-ec2-gpu:
-    name: Setup EC2 instance (GPU)
+  setup-hyperstack-gpu:
+    name: Setup Hyperstack instance (GPU)
     runs-on: ubuntu-24.04
     outputs:
       runner-name: ${{ steps.start-instance.outputs.label }}
@@ -228,9 +231,9 @@ jobs:
           -X POST "${{ secrets.NEW_ML_PROGRESS_TRACKER_URL }}experiment"
 
   run-cifar-10-gpu:
-    needs: [setup-ec2-gpu]
+    needs: [setup-hyperstack-gpu]
     name: Run benchmark (GPU)
-    runs-on: ${{ needs.setup-ec2-gpu.outputs.runner-name }}
+    runs-on: ${{ needs.setup-hyperstack-gpu.outputs.runner-name }}
     env:
       PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
     steps:
@@ -395,10 +398,10 @@ jobs:
           job-secret: ${{ secrets.JOB_SECRET }}
           label: ${{ needs.setup-ec2-cpu.outputs.runner-name }}
 
-  teardown-ec2-gpu:
-    name: Teardown EC2 instance (GPU)
+  teardown-hyperstack-gpu:
+    name: Teardown Hyperstack instance (GPU)
     if: ${{ always() }}
-    needs: [ setup-ec2-gpu, run-cifar-10-gpu ]
+    needs: [ setup-hyperstack-gpu, run-cifar-10-gpu ]
     runs-on: ubuntu-24.04
     steps:
       - name: Stop instance
@@ -409,7 +412,7 @@ jobs:
           github-token: ${{ secrets.SLAB_ACTION_TOKEN }}
           slab-url: ${{ secrets.SLAB_BASE_URL }}
           job-secret: ${{ secrets.JOB_SECRET }}
-          label: ${{ needs.setup-ec2-gpu.outputs.runner-name }}
+          label: ${{ needs.setup-hyperstack-gpu.outputs.runner-name }}
 
   slack-notification:
     runs-on: ubuntu-24.04
