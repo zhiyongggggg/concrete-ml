@@ -50,10 +50,7 @@ env:
   AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
   RUNNER_TOOL_CACHE: /opt/hostedtoolcache
   SLAB_PROFILE_CPU: big-cpu
-  # NOTE: Using single-h100 instead of 8xh100 due to Hyperstack availability issues
-  # The n3-H100x8-NVLink flavor returns 502 Bad Gateway errors
-  # TODO: Investigate 8x H100 availability and correct flavor names
-  SLAB_PROFILE_GPU: single-h100
+  SLAB_PROFILE_GPU: 8xh100
 
 
 # Jobs
