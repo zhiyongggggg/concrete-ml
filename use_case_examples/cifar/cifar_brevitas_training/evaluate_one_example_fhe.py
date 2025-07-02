@@ -127,8 +127,8 @@ _, keygen_execution_time = measure_execution_time(quantized_numpy_module.fhe_cir
 )
 print(f"Keygen took {keygen_execution_time} seconds")
 
-# Data torch to numpy
-x_numpy = x.numpy()
+# Data torch to numpy (move to CPU first if on GPU)
+x_numpy = x.cpu().numpy()
 
 # Initialize a list to store all the results
 all_results = []
