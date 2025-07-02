@@ -50,7 +50,7 @@ env:
   AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
   RUNNER_TOOL_CACHE: /opt/hostedtoolcache
   SLAB_PROFILE_CPU: big-cpu
-  SLAB_PROFILE_GPU: 8xh100
+  SLAB_PROFILE_GPU: single-h100
 
 
 # Jobs
@@ -124,6 +124,18 @@ jobs:
           apt-mark hold docker.io
           ./script/make_utils/setup_os_deps.sh
           make setup_env
+
+      - name: Verify CPU Installation
+        run: |
+          source .venv/bin/activate
+          echo "=== CONCRETE-PYTHON INSTALLATION VERIFICATION (CPU) ==="
+          python3 -c "
+          import concrete.compiler
+          print('Concrete GPU enabled:', concrete.compiler.check_gpu_enabled())
+          print('Concrete GPU available:', concrete.compiler.check_gpu_available())
+          print('Expected: Both should be False for CPU workflow')
+          "
+          echo "========================================================="
 
       - name: Alternative Concrete Python Wheel Download
         if: github.event.inputs.alternative-cp-wheel-artifact-id != 'none'
@@ -274,6 +286,18 @@ jobs:
           CP_VERSION=$(pip freeze | grep concrete-python)
           pip uninstall -y concrete-python
           pip install --extra-index-url https://pypi.zama.ai/gpu ${CP_VERSION}
+
+      - name: Verify GPU Installation
+        run: |
+          source .venv/bin/activate
+          echo "=== CONCRETE-PYTHON INSTALLATION VERIFICATION (GPU) ==="
+          python3 -c "
+          import concrete.compiler
+          print('Concrete GPU enabled:', concrete.compiler.check_gpu_enabled())
+          print('Concrete GPU available:', concrete.compiler.check_gpu_available())
+          print('Expected: GPU enabled should be True, GPU available depends on hardware')
+          "
+          echo "========================================================="
 
       - name: Alternative Concrete Python Wheel Download
         if: github.event.inputs.alternative-cp-wheel-artifact-id != 'none'
