@@ -69,12 +69,19 @@ checkpoint = torch.load(
 )
 torch_model.load_state_dict(checkpoint["state_dict"], strict=False)
 
+# Move model to the appropriate device
+torch_model = torch_model.to(DEVICE)
+
 # Import and load the CIFAR test dataset
 test_set = get_test_set(dataset="CIFAR10", datadir=CURRENT_DIR.joinpath(".datasets/"))
 test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
 
 # Get the first sample
 x, labels = next(iter(test_loader))
+
+# Move tensors to the appropriate device
+x = x.to(DEVICE)
+labels = labels.to(DEVICE)
 
 # Parameter `enable_unsafe_features` and `use_insecure_key_cache` are needed in order to be able to
 # cache generated keys through `insecure_key_cache_location`. As the name suggests, these
