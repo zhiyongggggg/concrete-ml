@@ -160,7 +160,17 @@ def main(model_name):
     experiments = []
     dataset_name = "CIFAR-10"
     experiment_data: Dict[str, Any] = {}
-    experiment_data["experiment_name"] = f"cifar-10-{model_name}"
+    
+    # Include device information in experiment name for easy filtering
+    device_suffix = ""
+    if "compilation_device" in metadata:
+        device_suffix = f"-{metadata['compilation_device']}"
+    elif "gpu_enabled" in metadata and metadata["gpu_enabled"]:
+        device_suffix = "-gpu"
+    else:
+        device_suffix = "-cpu"
+    
+    experiment_data["experiment_name"] = f"cifar-10-{model_name}{device_suffix}"
     experiment_data["experiment_metadata"] = metadata
     experiment_data["experiment_metadata"].update(
         {

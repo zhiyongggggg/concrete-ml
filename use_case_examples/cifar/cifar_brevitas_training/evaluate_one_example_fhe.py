@@ -253,6 +253,24 @@ metadata = {
     "p_error": P_ERROR,
     "cml_version": version("concrete-ml"),
     "cnp_version": version("concrete-python"),
+    # Device and GPU information for benchmark differentiation
+    "compilation_device": COMPILATION_DEVICE,
+    "pytorch_device": DEVICE,
+    "cuda_available": torch.cuda.is_available(),
+    "gpu_enabled": check_gpu_enabled(),
+    "gpu_available": check_gpu_available(),
+    "cml_use_gpu": os.environ.get('CML_USE_GPU', 'Not set'),
 }
+
+# Add GPU-specific information if available
+if torch.cuda.is_available():
+    try:
+        metadata.update({
+            "gpu_name": torch.cuda.get_device_name(0),
+            "gpu_memory_gb": round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1),
+            "cuda_version": torch.version.cuda,
+        })
+    except Exception as e:
+        metadata["gpu_info_error"] = str(e)
 with open("metadata.json", "w") as file:
     json.dump(metadata, file)

@@ -50,7 +50,7 @@ env:
   AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
   RUNNER_TOOL_CACHE: /opt/hostedtoolcache
   SLAB_PROFILE_CPU: big-cpu
-  SLAB_PROFILE_GPU: single-h100
+  SLAB_PROFILE_GPU: 8xh100
 
 
 # Jobs
