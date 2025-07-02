@@ -448,7 +448,7 @@ jobs:
           SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
           SLACK_ICON: https://pbs.twimg.com/profile_images/1274014582265298945/OjBKP9kn_400x400.png
           SLACK_COLOR: ${{ (needs.run-cifar-10-cpu.result == 'success' && needs.run-cifar-10-gpu.result == 'success') && 'success' || 'failure' }}
-          SLACK_MESSAGE: "Benchmark action: ${{ github.event.inputs.benchmark }} (${{ env.ACTION_RUN_URL }}) ended with results:\n- CPU: ${{ needs.run-cifar-10-cpu.result }}\n- GPU: ${{ needs.run-cifar-10-gpu.result }}"
+          SLACK_MESSAGE: "CIFAR-10 Benchmark Complete (${{ env.ACTION_RUN_URL }}):\n• Benchmark: ${{ github.event.inputs.benchmark }}\n• CPU (big-cpu): ${{ needs.run-cifar-10-cpu.result }}\n• GPU (single-h100): ${{ needs.run-cifar-10-gpu.result }}\n\nUploaded to database:\n• CPU experiment: cifar-10-${{ github.event.inputs.benchmark == 'cifar-10-8b' && '8-bit-split-v0-cpu' || '16-bits-trained-v0-cpu' }}\n• GPU experiment: cifar-10-${{ github.event.inputs.benchmark == 'cifar-10-8b' && '8-bit-split-v0-cuda' || '16-bits-trained-v0-cuda' }}"
           SLACK_USERNAME: ${{ secrets.BOT_USERNAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 

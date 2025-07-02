@@ -163,7 +163,9 @@ def main(model_name):
     
     # Include device information in experiment name for easy filtering
     device_suffix = ""
-    if "compilation_device" in metadata:
+    if "fhe_compilation_device" in metadata:
+        device_suffix = f"-{metadata['fhe_compilation_device']}"
+    elif "compilation_device" in metadata:  # Fallback for old metadata format
         device_suffix = f"-{metadata['compilation_device']}"
     elif "gpu_enabled" in metadata and metadata["gpu_enabled"]:
         device_suffix = "-gpu"

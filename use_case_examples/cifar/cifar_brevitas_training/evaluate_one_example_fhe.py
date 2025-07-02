@@ -22,7 +22,10 @@ KEYGEN_CACHE_DIR = CURRENT_DIR.joinpath(".keycache")
 # Add MPS (for macOS with Apple Silicon or AMD GPUs) support when error is fixed. For now, we
 # observe a decrease in torch's top1 accuracy when using MPS devices
 # FIXME: https://github.com/zama-ai/concrete-ml-internal/issues/3953
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+# For PyTorch operations, we use CPU (simpler and avoids device mismatch issues)
+DEVICE = "cpu"
+# For FHE compilation and execution, we use GPU if available
 COMPILATION_DEVICE = "cuda" if check_gpu_available() else "cpu"
 
 NUM_SAMPLES = int(os.environ.get("NUM_SAMPLES", 1))
@@ -35,17 +38,21 @@ print("=" * 50)
 print(f"PyTorch CUDA available: {torch.cuda.is_available()}")
 print(f"Concrete GPU enabled: {check_gpu_enabled()}")
 print(f"Concrete GPU available: {check_gpu_available()}")
-print(f"Selected PyTorch DEVICE: {DEVICE}")
-print(f"Selected COMPILATION_DEVICE: {COMPILATION_DEVICE}")
+print(f"PyTorch DEVICE: {DEVICE} (CPU for PyTorch operations)")
+print(f"FHE COMPILATION_DEVICE: {COMPILATION_DEVICE} (GPU used for FHE operations)")
 print(f"CML_USE_GPU environment variable: {os.environ.get('CML_USE_GPU', 'Not set')}")
 
 if torch.cuda.is_available():
     try:
         gpu_name = torch.cuda.get_device_name(0)
         gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
-        print(f"GPU Device Name: {gpu_name}")
+        print(f"Available GPU: {gpu_name}")
         print(f"GPU Memory: {gpu_memory:.1f} GB")
         print(f"CUDA Version: {torch.version.cuda}")
+        if COMPILATION_DEVICE == "cuda":
+            print("✅ GPU will be used for FHE operations")
+        else:
+            print("⚠️  GPU available but Concrete GPU not enabled")
     except Exception as e:
         print(f"Error getting GPU info: {e}")
 else:
@@ -94,8 +101,8 @@ checkpoint = torch.load(
 )
 torch_model.load_state_dict(checkpoint["state_dict"], strict=False)
 
-# Move model to the appropriate device
-torch_model = torch_model.to(DEVICE)
+# Keep model on CPU for PyTorch operations
+# (GPU will be used only for FHE operations)
 
 # Import and load the CIFAR test dataset
 test_set = get_test_set(dataset="CIFAR10", datadir=CURRENT_DIR.joinpath(".datasets/"))
@@ -103,10 +110,6 @@ test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
 
 # Get the first sample
 x, labels = next(iter(test_loader))
-
-# Move tensors to the appropriate device
-x = x.to(DEVICE)
-labels = labels.to(DEVICE)
 
 # Parameter `enable_unsafe_features` and `use_insecure_key_cache` are needed in order to be able to
 # cache generated keys through `insecure_key_cache_location`. As the name suggests, these
@@ -153,8 +156,8 @@ _, keygen_execution_time = measure_execution_time(quantized_numpy_module.fhe_cir
 )
 print(f"✅ Keygen completed in {keygen_execution_time:.2f} seconds")
 
-# Data torch to numpy (move to CPU first if on GPU)
-x_numpy = x.cpu().numpy()
+# Data torch to numpy
+x_numpy = x.numpy()
 
 # Initialize a list to store all the results
 all_results = []
@@ -232,11 +235,13 @@ print("\n" + "=" * 50)
 print("🎯 CIFAR-10 FHE BENCHMARK COMPLETED")
 print("=" * 50)
 print(f"📊 Processed {NUM_SAMPLES} sample(s)")
-print(f"🔧 Compilation device: {COMPILATION_DEVICE}")
+print(f"🔧 FHE compilation device: {COMPILATION_DEVICE}")
 print(f"🖥️  PyTorch device: {DEVICE}")
 print(f"🔐 P-error: {P_ERROR}")
-if torch.cuda.is_available():
-    print(f"🎮 GPU: {torch.cuda.get_device_name(0)}")
+if torch.cuda.is_available() and COMPILATION_DEVICE == "cuda":
+    print(f"🎮 GPU used for FHE: {torch.cuda.get_device_name(0)}")
+elif torch.cuda.is_available():
+    print(f"⚠️  GPU available but not used: {torch.cuda.get_device_name(0)}")
 print("=" * 50)
 
 # Write the results to a CSV file
@@ -254,12 +259,13 @@ metadata = {
     "cml_version": version("concrete-ml"),
     "cnp_version": version("concrete-python"),
     # Device and GPU information for benchmark differentiation
-    "compilation_device": COMPILATION_DEVICE,
-    "pytorch_device": DEVICE,
+    "fhe_compilation_device": COMPILATION_DEVICE,
+    "pytorch_device": DEVICE,  # Always CPU in this setup
     "cuda_available": torch.cuda.is_available(),
     "gpu_enabled": check_gpu_enabled(),
     "gpu_available": check_gpu_available(),
     "cml_use_gpu": os.environ.get('CML_USE_GPU', 'Not set'),
+    "gpu_usage": "fhe_only",  # GPU used only for FHE operations, not PyTorch
 }
 
 # Add GPU-specific information if available
