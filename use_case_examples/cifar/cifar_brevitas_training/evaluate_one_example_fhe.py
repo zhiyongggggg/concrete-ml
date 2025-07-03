@@ -123,16 +123,23 @@ configuration = Configuration(
 )
 
 print("🔧 Compiling the model...")
-print(f"   Using compilation device: {COMPILATION_DEVICE}")
+print(f"   FHE target device: {COMPILATION_DEVICE}")
+print(f"   Ensuring model and input are on CPU for ONNX export")
+
+# Explicitly ensure model is on CPU before compilation
+# The ONNX export requires both model and input to be on the same device
+torch_model_cpu = torch_model.cpu()
+x_cpu = x.cpu()
+
 quantized_numpy_module, compilation_execution_time = measure_execution_time(
     compile_brevitas_qat_model
 )(
-    torch_model,
-    x,
+    torch_model_cpu,
+    x_cpu,
     configuration=configuration,
     rounding_threshold_bits={"method": Exactness.APPROXIMATE, "n_bits": 6},
     p_error=P_ERROR,
-    device=COMPILATION_DEVICE,
+    device=COMPILATION_DEVICE,  # This controls where FHE circuit runs, not ONNX export
 )
 assert isinstance(quantized_numpy_module, QuantizedModule)
 
