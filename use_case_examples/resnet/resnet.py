@@ -724,3 +724,30 @@ def resnet18_custom(
     weights = ResNet18_Weights.verify(weights)
 
     return _resnet(BasicBlock, [2, 2, 2, 2], weights, progress, **kwargs)
+
+@register_model()
+@handle_legacy_interface(weights=("pretrained", ResNet50_Weights.IMAGENET1K_V1))
+def resnet50_custom(
+    *, weights: Optional[ResNet50_Weights] = None, progress: bool = True, **kwargs: Any
+) -> ResNet:
+    """ResNet-50 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
+
+    Args:
+        weights (:class:`~torchvision.models.ResNet50_Weights`, optional): The
+            pre-trained weights to use. See
+            :class:`~torchvision.models.ResNet50_Weights` below for
+            more details, and possible values. By default, no pre-trained
+            weights are used.
+        progress (bool, optional): If True, displays a progress bar of the
+            download to stderr. Default is True.
+        **kwargs: parameters passed to the ``torchvision.models.resnet.ResNet``
+            base class. Please refer to the `source code
+            <https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py>`_
+            for more details about this class.
+
+    .. autoclass:: torchvision.models.ResNet50_Weights
+        :members:
+    """
+    weights = ResNet50_Weights.verify(weights)
+
+    return _resnet(Bottleneck, [3, 4, 6, 3], weights, progress, **kwargs)
