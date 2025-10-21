@@ -1,7 +1,7 @@
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
-import torchvision.datasets as ds
+import torchvision.datasets as CIFAR10
 from torchvision import transforms
 
 
@@ -137,7 +137,7 @@ class CIFAR10Processor:
 
         # Load CIFAR-10 test set
 
-        full_dataset = ds(
+        full_dataset = CIFAR10(
             root=data_dir, 
             train=False, 
             download=True, 
