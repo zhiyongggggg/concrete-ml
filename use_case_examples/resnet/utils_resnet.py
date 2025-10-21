@@ -1,7 +1,7 @@
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
-import torchvision.datasets as CIFAR10
+from torchvision.datasets import CIFAR10
 from torchvision import transforms
 
 
