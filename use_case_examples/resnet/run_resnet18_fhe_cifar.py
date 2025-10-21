@@ -31,7 +31,7 @@ def load_data():
 
 def evaluate_model(model, processor):
     with torch.no_grad():
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = "cpu"  # torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
 
         outputs = []
@@ -59,7 +59,7 @@ def compile_model(
     n_bits,
     rounding_threshold_bits=None,
     fhe_mode="disable",
-    compilation_device="gpu",
+    compilation_device="cpu",
 ):
     """
     Compile the model using either build_quantized_module or compile_torch_model.
