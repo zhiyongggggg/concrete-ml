@@ -304,7 +304,7 @@ def main():
 
     resnet18 = load_model()
     processor = CIFAR10Processor(
-        NUM_TEST_SAMPLES, CALIBRATION_SAMPLES, cache_dir=args.dataset_cache_dir
+        NUM_TEST_SAMPLES, CALIBRATION_SAMPLES, 
     )
     calib_images = processor.get_calibration_tensor()
 
