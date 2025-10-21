@@ -61,6 +61,17 @@ def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
+def resnet18_cifar10(num_classes=10, weights=None, **kwargs):
+    """ResNet-18 adapted for CIFAR-10 (32x32 images)"""
+    model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes, **kwargs)
+    
+    # Adapt for 32x32 images instead of 224x224
+    model.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+    model.maxpool = nn.Identity()  # No maxpool for small images
+    model.avgpool = nn.AvgPool2d(kernel_size=4, stride=1, padding=0)  # 4x4 -> 1x1
+    
+    return model
+
 class BasicBlock(nn.Module):
     expansion: int = 1
 
